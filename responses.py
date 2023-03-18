@@ -499,19 +499,22 @@ def basket_add(request):
     qty = request.form.get("quantity")
 
     query = UserOrders.query.filter_by(zip_code=zip_code).first()
+    if query is None:
+     query = UserOrders(zip_code=zip_code, basket=[])
+     db.session.add(query)
+     db.session.commit()
+
     queried_food = ItemList.query.filter_by(item_code=item_code).first()
 
     # Append data to the database
-    # Temporary hack to allow basket migration.
     order: list = query.basket or []
-    basket = order + [
-        {"name": queried_food.name, "price": queried_food.price, "qty": qty}
-    ]
+    basket = order + [{"name": queried_food.name, "price": queried_food.price, "qty": qty}]
 
     query.basket = basket
     db.session.commit()
 
     return {"sketch": True}
+
 
 
 @multiple_root_nodes()
